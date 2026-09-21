@@ -76,6 +76,17 @@
       "presentation": {
         "reveal": "silent"
       }
+    },
+    {
+      "label": "Deploy to Cloudflare (Wrangler)",
+      "type": "shell",
+      "command": "npx -y wrangler deploy",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "focus": true
+      }
     }
   ]
 }

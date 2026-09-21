@@ -22,6 +22,9 @@ A modern, standalone, client-only single-file web application (`index.html`) des
   - Expandable advanced configuration (custom source name, bundle ID, icon URL, and optional **GitHub Personal Access Token** to bypass unauthenticated API rate limits or access private repositories).
   - Live visual app overview card (icon, latest version, package size, total IPA versions found).
   - Code preview with syntax highlighting, copy button with animated confirmation, and instant `source.json` download via Blob.
+  - **Shareable URL Parameter Support:** Append `?repo=owner/repo` to automatically populate the input and trigger generation on page load. A dedicated *"Share Link"* button lets you copy instant links.
+- **Direct AltStore Integration via Serverless Worker (`worker.js`):**
+  - Includes a zero-dependency Cloudflare Worker / Vercel Edge function ready to deploy, enabling AltStore to directly query dynamic URLs (e.g. `https://your-worker.workers.dev/?repo=utmapp/UTM`) and receive raw live `source.json`.
 
 ---
 
@@ -84,3 +87,22 @@ If you encounter a rate limit notice:
 2. Enter a **GitHub Personal Access Token** (no special scopes required for public repositories).
 3. The rate limit is immediately raised to **5,000 requests per hour**.
 *(The token is stored exclusively in your browser's volatile memory and is never transmitted to third-party servers).*
+
+---
+
+## 🌐 Direct AltStore Dynamic Source (`worker.js`)
+
+AltStore runs natively on iOS and uses `URLSession` to fetch sources. Because it does not run a browser engine, it expects a direct HTTP response with `Content-Type: application/json`.
+
+If you want AltStore to dynamically query GitHub on-the-fly, deploy the included [`worker.js`](worker.js) to **Cloudflare Workers** (100% free):
+
+1. Go to [dash.cloudflare.com](https://dash.cloudflare.com) $\rightarrow$ **Workers & Pages** $\rightarrow$ **Create Application**.
+2. Paste the contents of [`worker.js`](worker.js) and click **Deploy**.
+3. You now have a permanent live endpoint:
+   ```
+   https://<your-worker-name>.<subdomain>.workers.dev/?repo=utmapp/UTM
+   ```
+4. Add that URL directly into AltStore or trigger an instant one-tap source install via deep link:
+   ```
+   altstore://source?url=https%3A%2F%2F<your-worker-name>.<subdomain>.workers.dev%2F%3Frepo%3Dutmapp%2FUTM
+   ```

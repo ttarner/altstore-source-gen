@@ -1045,7 +1045,15 @@
             <span style="color: var(--text-dim);">•</span>
             <span id="jsonFileSize" style="color: var(--text-muted); font-size: 0.78rem;">0 KB</span>
           </div>
-          <div class="code-actions">
+            <!-- Share Link Button -->
+            <button type="button" id="btnShareLink" class="btn-action-sm" title="Copy shareable link with repository parameter">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+              </svg>
+              <span id="shareBtnText">Share Link</span>
+            </button>
+
             <!-- Copy Button -->
             <button type="button" id="btnCopy" class="btn-action-sm btn-copy" title="Copy to clipboard">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1400,6 +1408,7 @@
 
         this.initDOMElements();
         this.bindEvents();
+        this.checkQueryParams();
       }
 
       initDOMElements() {
@@ -1442,6 +1451,8 @@
         this.statLatestSize = document.getElementById("statLatestSize");
         this.jsonFileSize = document.getElementById("jsonFileSize");
         this.jsonPreview = document.getElementById("jsonPreview");
+        this.btnShareLink = document.getElementById("btnShareLink");
+        this.shareBtnText = document.getElementById("shareBtnText");
         this.btnCopy = document.getElementById("btnCopy");
         this.copyBtnText = document.getElementById("copyBtnText");
         this.btnDownload = document.getElementById("btnDownload");
@@ -1486,6 +1497,11 @@
           this.accordionToggle.setAttribute("aria-expanded", String(isOpen));
         });
 
+        // Share Link button
+        if (this.btnShareLink) {
+          this.btnShareLink.addEventListener("click", () => this.handleShareLink());
+        }
+
         // Copy button
         this.btnCopy.addEventListener("click", () => this.handleCopy());
 
@@ -1499,6 +1515,71 @@
             this.handleGenerate();
           }
         });
+      }
+
+      /**
+       * Checks for URL query parameters (?repo=... or ?url=... or ?source=...)
+       * and automatically fills the input and triggers source generation.
+       */
+      checkQueryParams() {
+        try {
+          const urlParams = new URLSearchParams(window.location.search);
+          const repo = urlParams.get("repo") || urlParams.get("url") || urlParams.get("source");
+          if (repo && repo.trim()) {
+            this.repoInput.value = repo.trim();
+            const token = urlParams.get("token");
+            if (token && this.githubToken) {
+              this.githubToken.value = token.trim();
+            }
+            // Trigger automatic generation
+            this.handleGenerate();
+          }
+        } catch (err) {
+          console.error("Error reading URL parameters:", err);
+        }
+      }
+
+      /**
+       * Copies a shareable link pointing to this generator with the active repository parameter
+       */
+      async handleShareLink() {
+        const inputVal = this.repoInput.value.trim();
+        if (!inputVal) return;
+
+        try {
+          const currentUrl = new URL(window.location.href);
+          currentUrl.searchParams.set("repo", inputVal);
+          const shareableUrl = currentUrl.toString();
+
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(shareableUrl);
+          } else {
+            const textArea = document.createElement("textarea");
+            textArea.value = shareableUrl;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            textArea.style.top = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            document.execCommand('copy');
+            textArea.remove();
+          }
+
+          // Feedback animation
+          const originalText = this.shareBtnText.textContent;
+          this.btnShareLink.classList.add("copied");
+          this.shareBtnText.textContent = "Link Copied!";
+
+          setTimeout(() => {
+            this.btnShareLink.classList.remove("copied");
+            this.shareBtnText.textContent = originalText;
+          }, 2500);
+
+        } catch (err) {
+          console.error("Clipboard copy error:", err);
+          alert("Unable to copy shareable link.");
+        }
       }
 
       /**
