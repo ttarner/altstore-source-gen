@@ -701,6 +701,170 @@
       font-family: var(--font-mono);
     }
 
+    /* Live Integration Links Card */
+    .links-card {
+      background: var(--bg-surface-elevated);
+      border: 1px solid rgba(99, 102, 241, 0.28);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .links-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+
+    .links-card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .links-card-desc {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .links-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .link-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.85rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 0.9rem;
+      transition: border-color 0.15s ease;
+    }
+
+    .link-row:hover {
+      border-color: var(--border-medium);
+    }
+
+    .link-row-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .link-label-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .link-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .link-tag {
+      font-size: 0.68rem;
+      padding: 0.1rem 0.4rem;
+      border-radius: var(--radius-full);
+      font-weight: 600;
+      background: rgba(99, 102, 241, 0.15);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.25);
+    }
+
+    .link-value {
+      font-size: 0.84rem;
+      font-family: var(--font-mono);
+      color: #cbd5e1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      user-select: all;
+    }
+
+    .link-actions-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    .btn-link-action {
+      height: 30px;
+      padding: 0 0.75rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-family: var(--font-sans);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+
+    .btn-link-action:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--text-primary);
+      border-color: var(--border-medium);
+    }
+
+    .btn-link-action.copied {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #34d399;
+    }
+
+    .btn-link-primary {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: rgba(99, 102, 241, 0.4);
+      color: #c7d2fe;
+    }
+
+    .btn-link-primary:hover {
+      background: rgba(99, 102, 241, 0.35);
+      color: #ffffff;
+    }
+
+    .links-empty-prompt {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      padding: 0.9rem 1rem;
+      background: rgba(99, 102, 241, 0.06);
+      border: 1px dashed rgba(99, 102, 241, 0.3);
+      border-radius: var(--radius-sm);
+    }
+
+    .links-prompt-text {
+      font-size: 0.84rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
     /* Code Preview Container */
     .code-container {
       background: #06090f;
@@ -963,8 +1127,19 @@
                 <input type="password" id="githubToken" class="text-input compact-input" placeholder="ghp_... (enables 5,000 req/h & private repos)">
               </div>
             </div>
+
+            <div>
+              <label class="section-label" for="workerUrlInput">
+                Cloudflare Worker URL (For Direct AltStore Integration)
+              </label>
+              <input type="url" id="workerUrlInput" class="text-input compact-input" placeholder="https://altstore-source-generator.<subdomain>.workers.dev">
+              <span class="form-help" style="margin-top: 0.35rem;">
+                💾 Saved automatically in your browser storage. Generates live AltStore source URLs and 1-tap deep links.
+              </span>
+            </div>
+
             <span class="form-help" style="margin-top: -0.25rem;">
-              💡 Your token is used exclusively in your browser to communicate with the GitHub API. It is never saved or transmitted to third-party servers.
+              💡 Your token and worker URL are stored locally in your browser and never transmitted to third parties.
             </span>
           </div>
         </div>
@@ -1033,6 +1208,92 @@
             <span class="stat-pill-label">Latest IPA Size</span>
             <span class="stat-pill-value" id="statLatestSize">0 MB</span>
           </div>
+        </div>
+      </div>
+
+      <!-- AltStore & SideStore Live Links Card -->
+      <div class="links-card" id="linksCard">
+        <div class="links-card-header">
+          <div class="links-card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+            <span>AltStore & SideStore Live Integration</span>
+          </div>
+          <span class="links-card-desc" id="linksCardSubtitle">Direct source and 1-tap deep links</span>
+        </div>
+
+        <!-- Populated if Worker URL is set -->
+        <div class="links-list" id="linksList" style="display: none;">
+          <!-- 1. Direct Source URL -->
+          <div class="link-row">
+            <div class="link-row-info">
+              <div class="link-label-group">
+                <span class="link-label">Direct Source URL</span>
+                <span class="link-tag">HTTP GET</span>
+              </div>
+              <span class="link-value" id="valDirectSourceUrl">https://...</span>
+            </div>
+            <div class="link-actions-group">
+              <button type="button" class="btn-link-action" id="btnCopySourceUrl" title="Copy raw source URL">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <span id="textCopySourceUrl">Copy URL</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. AltStore Deep Link -->
+          <div class="link-row">
+            <div class="link-row-info">
+              <div class="link-label-group">
+                <span class="link-label">AltStore Deep Link</span>
+                <span class="link-tag" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">1-Tap Install</span>
+              </div>
+              <span class="link-value" id="valAltStoreDeepLink">altstore://source?url=...</span>
+            </div>
+            <div class="link-actions-group">
+              <button type="button" class="btn-link-action" id="btnCopyAltStoreLink" title="Copy AltStore deep link">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <span id="textCopyAltStore">Copy Link</span>
+              </button>
+              <a href="#" id="btnOpenAltStore" class="btn-link-action btn-link-primary" title="Open directly in AltStore on iOS">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                <span>Open in AltStore</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- 3. SideStore Deep Link -->
+          <div class="link-row">
+            <div class="link-row-info">
+              <div class="link-label-group">
+                <span class="link-label">SideStore Deep Link</span>
+                <span class="link-tag" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">1-Tap Install</span>
+              </div>
+              <span class="link-value" id="valSideStoreDeepLink">sidestore://source?url=...</span>
+            </div>
+            <div class="link-actions-group">
+              <button type="button" class="btn-link-action" id="btnCopySideStoreLink" title="Copy SideStore deep link">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <span id="textCopySideStore">Copy Link</span>
+              </button>
+              <a href="#" id="btnOpenSideStore" class="btn-link-action btn-link-primary" title="Open directly in SideStore on iOS">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                <span>Open in SideStore</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Prompt shown if Worker URL is missing -->
+        <div class="links-empty-prompt" id="linksEmptyPrompt">
+          <span class="links-prompt-text">
+            ⚡ <strong>Want 1-tap AltStore & SideStore install links?</strong> Add your deployed Cloudflare Worker URL in Advanced Configuration.
+          </span>
+          <button type="button" class="btn-link-action btn-link-primary" id="btnOpenWorkerConfig">
+            Configure Worker URL
+          </button>
         </div>
       </div>
 
@@ -1407,8 +1668,20 @@
         this.currentRawJSON = "";
 
         this.initDOMElements();
+        this.initStorage();
         this.bindEvents();
         this.checkQueryParams();
+      }
+
+      initStorage() {
+        try {
+          const savedWorker = localStorage.getItem("altstore_worker_url");
+          if (savedWorker && this.workerUrlInput) {
+            this.workerUrlInput.value = savedWorker;
+          }
+        } catch (e) {
+          console.warn("Storage not available:", e);
+        }
       }
 
       initDOMElements() {
@@ -1426,6 +1699,7 @@
         this.customIdentifier = document.getElementById("customIdentifier");
         this.customIconURL = document.getElementById("customIconURL");
         this.githubToken = document.getElementById("githubToken");
+        this.workerUrlInput = document.getElementById("workerUrlInput");
 
         // Source pills
         this.sourceOptions = document.querySelectorAll(".source-option");
@@ -1456,6 +1730,23 @@
         this.btnCopy = document.getElementById("btnCopy");
         this.copyBtnText = document.getElementById("copyBtnText");
         this.btnDownload = document.getElementById("btnDownload");
+
+        // Live links elements
+        this.linksCard = document.getElementById("linksCard");
+        this.linksList = document.getElementById("linksList");
+        this.linksEmptyPrompt = document.getElementById("linksEmptyPrompt");
+        this.valDirectSourceUrl = document.getElementById("valDirectSourceUrl");
+        this.valAltStoreDeepLink = document.getElementById("valAltStoreDeepLink");
+        this.valSideStoreDeepLink = document.getElementById("valSideStoreDeepLink");
+        this.btnCopySourceUrl = document.getElementById("btnCopySourceUrl");
+        this.textCopySourceUrl = document.getElementById("textCopySourceUrl");
+        this.btnCopyAltStoreLink = document.getElementById("btnCopyAltStoreLink");
+        this.textCopyAltStore = document.getElementById("textCopyAltStore");
+        this.btnCopySideStoreLink = document.getElementById("btnCopySideStoreLink");
+        this.textCopySideStore = document.getElementById("textCopySideStore");
+        this.btnOpenAltStore = document.getElementById("btnOpenAltStore");
+        this.btnOpenSideStore = document.getElementById("btnOpenSideStore");
+        this.btnOpenWorkerConfig = document.getElementById("btnOpenWorkerConfig");
       }
 
       bindEvents() {
@@ -1508,6 +1799,46 @@
         // Download button
         this.btnDownload.addEventListener("click", () => this.handleDownload());
 
+        // Worker URL input persistence & live update
+        if (this.workerUrlInput) {
+          this.workerUrlInput.addEventListener("input", () => {
+            const val = this.workerUrlInput.value.trim();
+            try {
+              localStorage.setItem("altstore_worker_url", val);
+            } catch (e) {}
+            if (this.outputSection.classList.contains("visible")) {
+              this.updateLiveLinks(this.repoInput.value.trim());
+            }
+          });
+        }
+
+        // Open worker config button from empty prompt
+        if (this.btnOpenWorkerConfig) {
+          this.btnOpenWorkerConfig.addEventListener("click", () => {
+            this.accordion.classList.add("open");
+            this.accordionToggle.setAttribute("aria-expanded", "true");
+            this.workerUrlInput.focus();
+            this.workerUrlInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          });
+        }
+
+        // Live links copy buttons
+        if (this.btnCopySourceUrl) {
+          this.btnCopySourceUrl.addEventListener("click", () => {
+            this.copyGenericText(this.valDirectSourceUrl.textContent, this.btnCopySourceUrl, this.textCopySourceUrl);
+          });
+        }
+        if (this.btnCopyAltStoreLink) {
+          this.btnCopyAltStoreLink.addEventListener("click", () => {
+            this.copyGenericText(this.valAltStoreDeepLink.textContent, this.btnCopyAltStoreLink, this.textCopyAltStore);
+          });
+        }
+        if (this.btnCopySideStoreLink) {
+          this.btnCopySideStoreLink.addEventListener("click", () => {
+            this.copyGenericText(this.valSideStoreDeepLink.textContent, this.btnCopySideStoreLink, this.textCopySideStore);
+          });
+        }
+
         // Keyboard shortcut: Enter inside input triggers generation
         this.repoInput.addEventListener("keydown", (e) => {
           if (e.key === "Enter") {
@@ -1518,12 +1849,20 @@
       }
 
       /**
-       * Checks for URL query parameters (?repo=... or ?url=... or ?source=...)
+       * Checks for URL query parameters (?repo=... or ?url=... or ?source=... or ?worker=...)
        * and automatically fills the input and triggers source generation.
        */
       checkQueryParams() {
         try {
           const urlParams = new URLSearchParams(window.location.search);
+          const worker = urlParams.get("worker");
+          if (worker && this.workerUrlInput) {
+            this.workerUrlInput.value = worker.trim();
+            try {
+              localStorage.setItem("altstore_worker_url", worker.trim());
+            } catch (e) {}
+          }
+
           const repo = urlParams.get("repo") || urlParams.get("url") || urlParams.get("source");
           if (repo && repo.trim()) {
             this.repoInput.value = repo.trim();
@@ -1736,9 +2075,84 @@
         const jsonBytes = new Blob([this.currentRawJSON]).size;
         this.jsonFileSize.textContent = AltStoreNormalizer.formatBytes(jsonBytes);
 
+        // Update live integration links (AltStore & SideStore)
+        this.updateLiveLinks(this.repoInput.value.trim());
+
         // Display output section with animation
         this.outputSection.classList.add("visible");
         this.outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      /**
+       * Computes and updates the live AltStore / SideStore URLs and deep links
+       */
+      updateLiveLinks(inputVal) {
+        const workerRaw = (this.workerUrlInput?.value || "").trim().replace(/\/+$/, "");
+        
+        if (!workerRaw) {
+          if (this.linksList) this.linksList.style.display = "none";
+          if (this.linksEmptyPrompt) this.linksEmptyPrompt.style.display = "flex";
+          return;
+        }
+
+        // Ensure protocol
+        const workerBase = /^https?:\/\//i.test(workerRaw) ? workerRaw : `https://${workerRaw}`;
+        
+        let repoPath = (inputVal || this.repoInput.value || "").trim();
+        try {
+          const parsed = Providers.github.parseInput(repoPath);
+          repoPath = `${parsed.owner}/${parsed.repo}`;
+        } catch (e) {}
+
+        const directSourceUrl = `${workerBase}/?repo=${encodeURIComponent(repoPath)}`;
+        const altStoreDeepLink = `altstore://source?url=${encodeURIComponent(directSourceUrl)}`;
+        const sideStoreDeepLink = `sidestore://source?url=${encodeURIComponent(directSourceUrl)}`;
+
+        if (this.valDirectSourceUrl) this.valDirectSourceUrl.textContent = directSourceUrl;
+        if (this.valAltStoreDeepLink) this.valAltStoreDeepLink.textContent = altStoreDeepLink;
+        if (this.valSideStoreDeepLink) this.valSideStoreDeepLink.textContent = sideStoreDeepLink;
+
+        if (this.btnOpenAltStore) this.btnOpenAltStore.href = altStoreDeepLink;
+        if (this.btnOpenSideStore) this.btnOpenSideStore.href = sideStoreDeepLink;
+
+        if (this.linksList) this.linksList.style.display = "flex";
+        if (this.linksEmptyPrompt) this.linksEmptyPrompt.style.display = "none";
+      }
+
+      /**
+       * Generic clipboard copy helper with animated feedback
+       */
+      async copyGenericText(text, btnElement, labelElement) {
+        if (!text) return;
+
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+          } else {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            document.execCommand('copy');
+            textArea.remove();
+          }
+
+          if (labelElement && btnElement) {
+            const original = labelElement.textContent;
+            btnElement.classList.add("copied");
+            labelElement.textContent = "Copied!";
+            setTimeout(() => {
+              btnElement.classList.remove("copied");
+              labelElement.textContent = original;
+            }, 2500);
+          }
+        } catch (err) {
+          console.error("Copy error:", err);
+          alert("Unable to copy to clipboard.");
+        }
       }
 
       /**
