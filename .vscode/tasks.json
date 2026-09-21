@@ -1,0 +1,81 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start Local Server and Open Browser",
+      "type": "shell",
+      "command": "Start-Process 'http://localhost:8000'; python -m http.server 8000",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Serving HTTP",
+          "endsPattern": "Serving HTTP"
+        }
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": false
+      }
+    },
+    {
+      "label": "Start Local Server (Python)",
+      "type": "shell",
+      "command": "python -m http.server 8000",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Serving HTTP",
+          "endsPattern": "Serving HTTP"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": false
+      }
+    },
+    {
+      "label": "Start Local Server (Node.js)",
+      "type": "shell",
+      "command": "npx -y serve . -l 8000",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Accepting connections",
+          "endsPattern": "Accepting connections"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": false
+      }
+    },
+    {
+      "label": "Open index.html Directly in Browser",
+      "type": "shell",
+      "command": "explorer.exe \"${workspaceFolder}\\index.html\"",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "silent"
+      }
+    }
+  ]
+}

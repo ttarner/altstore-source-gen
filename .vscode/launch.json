@@ -1,0 +1,27 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch in Microsoft Edge (Local Server)",
+      "type": "msedge",
+      "request": "launch",
+      "url": "http://localhost:8000",
+      "preLaunchTask": "Start Local Server (Python)",
+      "webRoot": "${workspaceFolder}"
+    },
+    {
+      "name": "Launch in Google Chrome (Local Server)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:8000",
+      "preLaunchTask": "Start Local Server (Python)",
+      "webRoot": "${workspaceFolder}"
+    },
+    {
+      "name": "Open index.html in Edge (Local File)",
+      "type": "msedge",
+      "request": "launch",
+      "file": "${workspaceFolder}/index.html"
+    }
+  ]
+}

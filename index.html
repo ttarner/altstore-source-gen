@@ -1,0 +1,1767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Client-only source.json generator for AltStore and SideStore from GitHub Releases and heterogeneous data sources.">
+  <title>AltStore Source Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       DESIGN TOKENS & RESET (Linear / Raycast / Vercel Dark Theme)
+       ========================================================================== */
+    :root {
+      --bg-base: #080c14;
+      --bg-surface: #0e1626;
+      --bg-surface-elevated: #141f35;
+      --bg-surface-glass: rgba(14, 22, 38, 0.75);
+      --bg-input: #0a101b;
+      
+      --border-subtle: rgba(255, 255, 255, 0.07);
+      --border-medium: rgba(255, 255, 255, 0.13);
+      --border-focus: rgba(99, 102, 241, 0.55);
+
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --text-dim: #475569;
+
+      --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.25);
+      --accent-hover: #4f46e5;
+      --accent-active: #4338ca;
+      
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.2);
+      --warning: #f59e0b;
+      --warning-glow: rgba(245, 158, 11, 0.18);
+      --error: #ef4444;
+      --error-glow: rgba(239, 68, 68, 0.2);
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --radius-full: 9999px;
+
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+      --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
+      --shadow-glow: 0 0 35px var(--accent-glow);
+
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      min-height: 100vh;
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      color-scheme: dark;
+    }
+
+    /* Modern Subtle Radial Background Glow */
+    body {
+      background-image: 
+        radial-gradient(ellipse 65% 45% at 50% -10%, rgba(99, 102, 241, 0.16), transparent 70%),
+        radial-gradient(ellipse 50% 30% at 85% 15%, rgba(56, 189, 248, 0.08), transparent 60%),
+        radial-gradient(ellipse 40% 40% at 10% 80%, rgba(139, 92, 246, 0.06), transparent 60%);
+      background-attachment: fixed;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2.5rem 1.25rem 4rem;
+    }
+
+    /* Container */
+    .app-container {
+      width: 100%;
+      max-width: 980px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* ==========================================================================
+       HEADER
+       ========================================================================== */
+    .header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0.85rem;
+      padding: 0.5rem 0 1rem;
+    }
+
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.85rem;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.28);
+      border-radius: var(--radius-full);
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #a5b4fc;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .header-badge-dot {
+      width: 7px;
+      height: 7px;
+      background: #818cf8;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #818cf8;
+      animation: pulse 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.85); }
+    }
+
+    .title {
+      font-size: 2.4rem;
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      line-height: 1.15;
+      background: linear-gradient(180deg, #ffffff 25%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      max-width: 620px;
+      color: var(--text-secondary);
+      font-size: 1.02rem;
+      font-weight: 400;
+    }
+
+    /* ==========================================================================
+       CARDS & SURFACES
+       ========================================================================== */
+    .card {
+      background: var(--bg-surface-glass);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      box-shadow: var(--shadow-md);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+      border-color: var(--border-medium);
+    }
+
+    /* ==========================================================================
+       SOURCE SELECTOR (Segmented Pills)
+       ========================================================================== */
+    .section-label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .source-selector-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .segmented-control {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 0.75rem;
+      background: var(--bg-input);
+      padding: 0.5rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .source-option {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: var(--font-sans);
+      font-size: 0.92rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      text-align: left;
+      user-select: none;
+    }
+
+    .source-option-content {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .source-icon {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+      flex-shrink: 0;
+    }
+
+    .source-option.active {
+      background: var(--bg-surface-elevated);
+      color: var(--text-primary);
+      border-color: rgba(99, 102, 241, 0.4);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4), 0 0 15px rgba(99, 102, 241, 0.15);
+    }
+
+    .source-option.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      filter: grayscale(0.4);
+    }
+
+    .source-option:not(.disabled):not(.active):hover {
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-primary);
+    }
+
+    .badge-pill {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--radius-full);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-active {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-soon {
+      background: rgba(148, 163, 184, 0.12);
+      color: #94a3b8;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    /* ==========================================================================
+       FORM & INPUTS
+       ========================================================================== */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .form-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .form-label {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .form-help {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-icon-leading {
+      position: absolute;
+      left: 1rem;
+      width: 18px;
+      height: 18px;
+      color: var(--text-muted);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .text-input {
+      width: 100%;
+      height: 48px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 0 1rem 0 2.85rem;
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .text-input:focus {
+      border-color: var(--border-focus);
+      background: #0d1524;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+    }
+
+    .text-input::placeholder {
+      color: var(--text-dim);
+    }
+
+    /* Sample Repos Tags */
+    .samples-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.6rem;
+    }
+
+    .samples-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .sample-pill {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      padding: 0.22rem 0.55rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .sample-pill:hover {
+      background: rgba(99, 102, 241, 0.12);
+      border-color: rgba(99, 102, 241, 0.35);
+      color: #c7d2fe;
+    }
+
+    /* Advanced Options Accordion */
+    .accordion {
+      margin-top: 1.25rem;
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 1.25rem;
+    }
+
+    .accordion-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0.25rem 0;
+      transition: color 0.15s ease;
+    }
+
+    .accordion-toggle:hover {
+      color: var(--text-primary);
+    }
+
+    .accordion-chevron {
+      width: 16px;
+      height: 16px;
+      transition: transform 0.25s ease;
+    }
+
+    .accordion.open .accordion-chevron {
+      transform: rotate(180deg);
+    }
+
+    .accordion-content {
+      display: none;
+      flex-direction: column;
+      gap: 1rem;
+      padding-top: 1rem;
+    }
+
+    .accordion.open .accordion-content {
+      display: flex;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    @media (max-width: 640px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .compact-input {
+      height: 40px;
+      padding-left: 0.9rem;
+      font-size: 0.88rem;
+    }
+
+    /* Actions Bar */
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 0.85rem;
+      margin-top: 1.75rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      height: 44px;
+      padding: 0 1.35rem;
+      border-radius: var(--radius-md);
+      font-family: var(--font-sans);
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+      text-decoration: none;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--border-medium);
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.09);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* ==========================================================================
+       FEEDBACK & STATUS CONTAINERS (Loading, Error, Notice)
+       ========================================================================== */
+    .status-panel {
+      display: none;
+      padding: 1.25rem 1.5rem;
+      border-radius: var(--radius-md);
+      font-size: 0.92rem;
+      animation: fadeIn 0.25s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .status-panel.loading {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: rgba(99, 102, 241, 0.07);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      color: #c7d2fe;
+    }
+
+    .spinner {
+      width: 22px;
+      height: 22px;
+      border: 2.5px solid rgba(99, 102, 241, 0.3);
+      border-top-color: #818cf8;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .status-panel.error {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.9rem;
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.28);
+      color: #fca5a5;
+    }
+
+    .error-icon {
+      width: 22px;
+      height: 22px;
+      color: #ef4444;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .error-title {
+      font-weight: 700;
+      color: #fee2e2;
+      margin-bottom: 0.25rem;
+    }
+
+    .error-desc {
+      font-size: 0.87rem;
+      color: #fca5a5;
+      line-height: 1.45;
+    }
+
+    .error-hint {
+      margin-top: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      color: #cbd5e1;
+    }
+
+    /* ==========================================================================
+       OUTPUT & PREVIEW SECTION
+       ========================================================================== */
+    .output-section {
+      display: none;
+      flex-direction: column;
+      gap: 1.25rem;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .output-section.visible {
+      display: flex;
+    }
+
+    /* Metadata Preview Card */
+    .meta-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.2rem 1.4rem;
+    }
+
+    .app-preview-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .app-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      object-fit: cover;
+      background: #1e293b;
+      border: 1px solid var(--border-medium);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .app-avatar-fallback {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #3730a3, #4338ca);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: white;
+      border: 1px solid var(--border-medium);
+    }
+
+    .app-details {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .app-title-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .app-name {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .app-badge-version {
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      background: rgba(99, 102, 241, 0.18);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 0.15rem 0.45rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .app-meta-sub {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .meta-stat-group {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .stat-pill {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .stat-pill-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-pill-value {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+    }
+
+    /* Code Preview Container */
+    .code-container {
+      background: #06090f;
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+    }
+
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1.25rem;
+      background: rgba(255, 255, 255, 0.025);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .code-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+    }
+
+    .code-title-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+    }
+
+    .code-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .btn-action-sm {
+      height: 32px;
+      padding: 0 0.85rem;
+      font-size: 0.8rem;
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-family: var(--font-sans);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-action-sm:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
+      border-color: var(--border-medium);
+    }
+
+    .btn-action-sm.btn-copy.copied {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #34d399;
+    }
+
+    .btn-action-sm.btn-download-primary {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: rgba(99, 102, 241, 0.4);
+      color: #c7d2fe;
+    }
+
+    .btn-action-sm.btn-download-primary:hover {
+      background: rgba(99, 102, 241, 0.3);
+      color: #ffffff;
+    }
+
+    .code-body {
+      max-height: 480px;
+      overflow: auto;
+      padding: 1.25rem;
+      font-family: var(--font-mono);
+      font-size: 0.86rem;
+      line-height: 1.55;
+      background: transparent;
+      color: #e2e8f0;
+      tab-size: 2;
+      white-space: pre;
+    }
+
+    /* Custom Scrollbar for Code Block */
+    .code-body::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    .code-body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .code-body::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 4px;
+    }
+
+    .code-body::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.22);
+    }
+
+    /* Simple JSON Syntax Colors */
+    .json-key { color: #818cf8; }
+    .json-string { color: #34d399; }
+    .json-number { color: #fb923c; }
+    .json-boolean { color: #f472b6; }
+    .json-null { color: #94a3b8; }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+    }
+
+    .footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+
+    .footer a:hover {
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-badge">
+        <span class="header-badge-dot"></span>
+        AltStore & SideStore Source Generator
+      </div>
+      <h1 class="title">Generate your source.json</h1>
+      <p class="subtitle">
+        Create ready-to-use source repositories for AltStore and SideStore from heterogeneous data sources. 100% client-side, secure, and instant.
+      </p>
+    </header>
+
+    <!-- Main Card -->
+    <main class="card">
+      <!-- 1. Source Selector -->
+      <div class="source-selector-wrapper">
+        <span class="section-label">1. Select Data Source</span>
+        <div class="segmented-control" id="sourceSelector" role="tablist">
+          <!-- GitHub (Active) -->
+          <button type="button" class="source-option active" data-provider="github" role="tab" aria-selected="true">
+            <div class="source-option-content">
+              <svg class="source-icon" viewBox="0 0 24 24">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+              </svg>
+              <span>GitHub Releases</span>
+            </div>
+            <span class="badge-pill badge-active">Active</span>
+          </button>
+
+          <!-- GitLab (Coming soon) -->
+          <button type="button" class="source-option disabled" data-provider="gitlab" disabled role="tab" aria-selected="false" title="Coming soon">
+            <div class="source-option-content">
+              <svg class="source-icon" viewBox="0 0 24 24">
+                <path d="M23.6 9.58l-1.33-4.11a.76.76 0 00-.28-.39.77.77 0 00-.47-.13.78.78 0 00-.46.16.74.74 0 00-.26.41L18.77 12H5.23L3.2 5.52a.74.74 0 00-.26-.41.78.78 0 00-.46-.16.77.77 0 00-.47.13.76.76 0 00-.28.39L.4 9.58a.93.93 0 00.33 1.04l10.84 7.87a.78.78 0 00.86 0L23.27 10.6a.93.93 0 00.33-1.02z"/>
+              </svg>
+              <span>GitLab Releases</span>
+            </div>
+            <span class="badge-pill badge-soon">Coming soon</span>
+          </button>
+
+          <!-- Direct Manifest (Coming soon) -->
+          <button type="button" class="source-option disabled" data-provider="manifest" disabled role="tab" aria-selected="false" title="Coming soon">
+            <div class="source-option-content">
+              <svg class="source-icon" viewBox="0 0 24 24">
+                <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+              </svg>
+              <span>Direct Manifest</span>
+            </div>
+            <span class="badge-pill badge-soon">Coming soon</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. Dynamic Input Form -->
+      <form id="generatorForm" onsubmit="return false;">
+        <div class="form-group">
+          <div class="form-label-row">
+            <label class="form-label" for="repoInput" id="inputLabel">
+              GitHub Repository
+            </label>
+            <span class="form-help" id="inputHelp">Enter repository URL or owner/repo path</span>
+          </div>
+          
+          <div class="input-wrapper">
+            <span class="input-icon-leading">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+              </svg>
+            </span>
+            <input 
+              type="text" 
+              id="repoInput" 
+              class="text-input" 
+              placeholder="https://github.com/utmapp/UTM or utmapp/UTM" 
+              autocomplete="off" 
+              spellcheck="false"
+              required
+            >
+          </div>
+
+          <!-- Quick Samples Pills -->
+          <div class="samples-wrapper">
+            <span class="samples-label">Quick samples:</span>
+            <button type="button" class="sample-pill" data-sample="utmapp/UTM">utmapp/UTM</button>
+            <button type="button" class="sample-pill" data-sample="LiveContainer/LiveContainer">LiveContainer/LiveContainer</button>
+            <button type="button" class="sample-pill" data-sample="Enmity-Mod/Enmity">Enmity-Mod/Enmity</button>
+          </div>
+        </div>
+
+        <!-- Advanced Customization Accordion -->
+        <div class="accordion" id="advancedAccordion">
+          <button type="button" class="accordion-toggle" id="accordionToggle" aria-expanded="false">
+            <span>Advanced Configuration & Token (optional)</span>
+            <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          
+          <div class="accordion-content">
+            <div class="grid-2">
+              <div>
+                <label class="section-label" for="customSourceName">Source Name (Override)</label>
+                <input type="text" id="customSourceName" class="text-input compact-input" placeholder="Default: repository name">
+              </div>
+              <div>
+                <label class="section-label" for="customIdentifier">Identifier / Bundle ID (Override)</label>
+                <input type="text" id="customIdentifier" class="text-input compact-input" placeholder="Default: com.{owner}.{repo}">
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div>
+                <label class="section-label" for="customIconURL">Icon URL (Override)</label>
+                <input type="url" id="customIconURL" class="text-input compact-input" placeholder="Default: repo owner avatar">
+              </div>
+              <div>
+                <label class="section-label" for="githubToken">
+                  GitHub Personal Access Token
+                </label>
+                <input type="password" id="githubToken" class="text-input compact-input" placeholder="ghp_... (enables 5,000 req/h & private repos)">
+              </div>
+            </div>
+            <span class="form-help" style="margin-top: -0.25rem;">
+              💡 Your token is used exclusively in your browser to communicate with the GitHub API. It is never saved or transmitted to third-party servers.
+            </span>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button type="submit" id="btnGenerate" class="btn btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span>Generate source.json</span>
+          </button>
+        </div>
+      </form>
+    </main>
+
+    <!-- Feedback Container (Loading & Errors) -->
+    <div id="statusLoading" class="status-panel loading" role="status" aria-live="polite">
+      <div class="spinner"></div>
+      <div>
+        <div style="font-weight: 600; color: #ffffff;" id="loadingTitle">Processing...</div>
+        <div style="font-size: 0.82rem; color: #a5b4fc;" id="loadingStep">Connecting to GitHub...</div>
+      </div>
+    </div>
+
+    <div id="statusError" class="status-panel error" role="alert" aria-live="assertive">
+      <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <div>
+        <div class="error-title" id="errorTitle">An error occurred</div>
+        <div class="error-desc" id="errorMessage">Error details</div>
+        <div class="error-hint" id="errorHint" style="display: none;"></div>
+      </div>
+    </div>
+
+    <!-- Output Section (Preview, Stats & Quick Actions) -->
+    <section class="output-section" id="outputSection">
+      <!-- App / Source Summary Header -->
+      <div class="meta-card">
+        <div class="app-preview-info">
+          <div id="appAvatarContainer">
+            <img id="appAvatar" class="app-avatar" alt="App Icon" src="" onerror="this.style.display='none'; document.getElementById('appAvatarFallback').style.display='flex';">
+            <div id="appAvatarFallback" class="app-avatar-fallback" style="display: none;">IPA</div>
+          </div>
+          <div class="app-details">
+            <div class="app-title-row">
+              <span class="app-name" id="summaryAppName">App Name</span>
+              <span class="app-badge-version" id="summaryLatestVersion">v1.0.0</span>
+            </div>
+            <div class="app-meta-sub">
+              <span id="summaryDeveloper">Developer</span> • 
+              <span id="summaryBundleId" style="font-family: var(--font-mono); color: var(--text-muted);">com.example.app</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="meta-stat-group">
+          <div class="stat-pill">
+            <span class="stat-pill-label">IPA Versions</span>
+            <span class="stat-pill-value" id="statVersionsCount">0</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-pill-label">Latest IPA Size</span>
+            <span class="stat-pill-value" id="statLatestSize">0 MB</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- JSON Code Preview Card -->
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-title">
+            <span class="code-title-dot"></span>
+            <span>source.json</span>
+            <span style="color: var(--text-dim);">•</span>
+            <span id="jsonFileSize" style="color: var(--text-muted); font-size: 0.78rem;">0 KB</span>
+          </div>
+          <div class="code-actions">
+            <!-- Copy Button -->
+            <button type="button" id="btnCopy" class="btn-action-sm btn-copy" title="Copy to clipboard">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <span id="copyBtnText">Copy to clipboard</span>
+            </button>
+            
+            <!-- Download Button -->
+            <button type="button" id="btnDownload" class="btn-action-sm btn-download-primary" title="Download source.json file">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Download source.json</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Scrollable Code Viewer -->
+        <pre class="code-body" id="jsonPreview" tabindex="0"><code>// Generated source.json will appear here...</code></pre>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      Designed for the <a href="https://altstore.io" target="_blank" rel="noopener noreferrer">AltStore</a> and <a href="https://sidestore.io" target="_blank" rel="noopener noreferrer">SideStore</a> ecosystem. Modular provider and client-only architecture.
+    </footer>
+  </div>
+
+  <!-- ==========================================================================
+       JAVASCRIPT: MODULAR ARCHITECTURE
+       ========================================================================== -->
+  <script>
+    /**
+     * ========================================================================
+     * 1. CORE ENGINE / ALTSTORE NORMALIZER
+     * ========================================================================
+     * Central engine independent from external data sources.
+     * Receives a NormalizedSourcePayload and outputs the final source.json
+     * compliant with official AltStore & SideStore specifications.
+     */
+    const AltStoreNormalizer = {
+      /**
+       * Formats bytes into a human-readable string (B, KB, MB, GB)
+       */
+      formatBytes(bytes, decimals = 1) {
+        if (!bytes || bytes === 0) return '0 B';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+      },
+
+      /**
+       * Generates final AltStore compliant JSON structure
+       * @param {Object} payload - NormalizedSourcePayload
+       * @param {Object} overrides - Optional user-defined field overrides
+       * @returns {Object} Valid AltStore source JSON
+       */
+      buildSourceJSON(payload, overrides = {}) {
+        if (!payload || !Array.isArray(payload.apps) || payload.apps.length === 0) {
+          throw new Error("The normalized payload contains no valid apps.");
+        }
+
+        const primaryApp = payload.apps[0];
+        
+        // Resolve source-level metadata
+        const sourceName = overrides.sourceName?.trim() || payload.sourceName || primaryApp.name || "AltStore Source";
+        const sourceIdentifier = overrides.sourceIdentifier?.trim() || payload.sourceIdentifier || primaryApp.bundleIdentifier || "com.altstore.source";
+        const sourceSubtitle = overrides.sourceSubtitle?.trim() || payload.sourceSubtitle || primaryApp.subtitle || "";
+        const sourceDescription = overrides.sourceDescription?.trim() || payload.sourceDescription || primaryApp.localizedDescription || "";
+        const sourceIconURL = overrides.sourceIconURL?.trim() || payload.sourceIconURL || primaryApp.iconURL || "";
+        const sourceWebsite = overrides.sourceWebsite?.trim() || payload.sourceWebsite || "";
+
+        // Normalize apps catalog
+        const normalizedApps = payload.apps.map(app => {
+          const appName = overrides.sourceName?.trim() || app.name;
+          const appBundleId = overrides.sourceIdentifier?.trim() || app.bundleIdentifier;
+          const appIcon = overrides.sourceIconURL?.trim() || app.iconURL || sourceIconURL;
+
+          // Sort versions descending chronologically (newest version must be first for AltStore update checking)
+          const sortedVersions = [...(app.versions || [])]
+            .map(v => ({
+              version: String(v.version).trim(),
+              date: v.date || new Date().toISOString(),
+              downloadURL: v.downloadURL,
+              size: typeof v.size === 'number' ? v.size : parseInt(v.size, 10) || 0,
+              localizedDescription: v.localizedDescription || `Release ${v.version}`
+            }))
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+          return {
+            name: appName,
+            bundleIdentifier: appBundleId,
+            developerName: app.developerName || "Developer",
+            subtitle: app.subtitle || "",
+            localizedDescription: app.localizedDescription || "",
+            iconURL: appIcon,
+            tintColor: app.tintColor || "#007AFF",
+            versions: sortedVersions
+          };
+        });
+
+        const result = {
+          name: sourceName,
+          identifier: sourceIdentifier,
+          subtitle: sourceSubtitle,
+          description: sourceDescription,
+          iconURL: sourceIconURL,
+          website: sourceWebsite,
+          apps: normalizedApps,
+          news: payload.news || []
+        };
+
+        // Clean up empty optional root fields
+        if (!result.subtitle) delete result.subtitle;
+        if (!result.description) delete result.description;
+        if (!result.iconURL) delete result.iconURL;
+        if (!result.website) delete result.website;
+
+        return result;
+      }
+    };
+
+    /**
+     * ========================================================================
+     * 2. PROVIDER REGISTRY & PATTERN ADAPTER
+     * ========================================================================
+     * Extensible data source registry. Each provider exposes:
+     * - id, name, badge, enabled, placeholder, helper
+     * - fetchData(params): fetch and map towards NormalizedSourcePayload
+     */
+    const Providers = {
+      /**
+       * Provider: GitHub Releases
+       */
+      github: {
+        id: "github",
+        name: "GitHub Releases",
+        badge: "Active",
+        enabled: true,
+        description: "Extracts metadata and releases with .ipa binary assets from public GitHub repositories.",
+        inputLabel: "GitHub Repository",
+        inputPlaceholder: "https://github.com/utmapp/UTM or utmapp/UTM",
+        inputHelp: "Supports full repository URLs or short owner/repo format (e.g., utmapp/UTM).",
+
+        /**
+         * Parses and extracts owner and repository from multiple URL / string formats
+         */
+        parseInput(input) {
+          if (!input || typeof input !== "string") {
+            throw new Error("Please specify a valid GitHub repository URL or path.");
+          }
+          let cleaned = input.trim();
+          // Strip .git and trailing slashes
+          cleaned = cleaned.replace(/\.git\/?$/i, '').replace(/\/+$/, '');
+
+          // Full HTTPS URL format https://github.com/owner/repo
+          const urlMatch = cleaned.match(/github\.com\/([^\/\s]+)\/([^\/\s]+)/i);
+          if (urlMatch) {
+            return { owner: urlMatch[1], repo: urlMatch[2] };
+          }
+
+          // SSH format git@github.com:owner/repo
+          const sshMatch = cleaned.match(/git@github\.com:([^\/\s]+)\/([^\/\s]+)/i);
+          if (sshMatch) {
+            return { owner: sshMatch[1], repo: sshMatch[2] };
+          }
+
+          // Short format owner/repo
+          const shortMatch = cleaned.match(/^([a-zA-Z0-9_\-\.]+)\/([a-zA-Z0-9_\-\.]+)$/);
+          if (shortMatch) {
+            return { owner: shortMatch[1], repo: shortMatch[2] };
+          }
+
+          throw new Error("Unrecognized repository format. Enter 'owner/repo' (e.g., utmapp/UTM) or a full URL 'https://github.com/owner/repo'.");
+        },
+
+        /**
+         * Executes GitHub API queries and normalizes payload
+         */
+        async fetchData({ input, token, onProgress }) {
+          const { owner, repo } = this.parseInput(input);
+          
+          const headers = {
+            "Accept": "application/vnd.github.v3+json"
+          };
+          if (token && token.trim()) {
+            headers["Authorization"] = `Bearer ${token.trim()}`;
+          }
+
+          if (onProgress) onProgress("Connecting to GitHub API and fetching repository info...");
+
+          // 1. Fetch repository metadata
+          const repoResponse = await fetch(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`, { headers });
+          
+          if (!repoResponse.ok) {
+            if (repoResponse.status === 404) {
+              throw new Error(`Repository "${owner}/${repo}" was not found on GitHub. Verify that owner and repository name are correct or that the repo is not private.`);
+            }
+            if (repoResponse.status === 403) {
+              const remaining = repoResponse.headers.get("x-ratelimit-remaining");
+              if (remaining === "0") {
+                const resetTime = repoResponse.headers.get("x-ratelimit-reset");
+                const resetStr = resetTime ? new Date(parseInt(resetTime, 10) * 1000).toLocaleTimeString() : "soon";
+                const err = new Error(`GitHub API rate limit exceeded (60 req/hour for unauthenticated IPs). Quota resets at ${resetStr}.`);
+                err.isRateLimit = true;
+                throw err;
+              }
+              throw new Error(`Access denied (HTTP 403) from GitHub for "${owner}/${repo}".`);
+            }
+            throw new Error(`GitHub API error while verifying repository: HTTP ${repoResponse.status} ${repoResponse.statusText}`);
+          }
+
+          const repoData = await repoResponse.json();
+
+          // 2. Fetch releases (up to 100 to capture complete history)
+          if (onProgress) onProgress("Fetching release history from GitHub...");
+          const releasesResponse = await fetch(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/releases?per_page=100`, { headers });
+
+          if (!releasesResponse.ok) {
+            if (releasesResponse.status === 403) {
+              const err = new Error("GitHub API rate limit reached while fetching releases.");
+              err.isRateLimit = true;
+              throw err;
+            }
+            throw new Error(`GitHub API error while fetching releases: HTTP ${releasesResponse.status}`);
+          }
+
+          const releasesData = await releasesResponse.json();
+
+          if (!Array.isArray(releasesData) || releasesData.length === 0) {
+            throw new Error(`The repository "${owner}/${repo}" does not contain any published releases.`);
+          }
+
+          // 3. Filter releases containing at least one .ipa asset
+          if (onProgress) onProgress("Scanning release assets for .ipa binaries...");
+          const ipaReleases = [];
+
+          for (const rel of releasesData) {
+            if (rel.draft) continue; // Skip unpublished drafts
+            const assets = rel.assets || [];
+            // Find first asset ending with .ipa
+            const ipaAsset = assets.find(a => a.name && a.name.toLowerCase().endsWith('.ipa'));
+            if (ipaAsset) {
+              ipaReleases.push({
+                release: rel,
+                asset: ipaAsset
+              });
+            }
+          }
+
+          if (ipaReleases.length === 0) {
+            throw new Error(`Found ${releasesData.length} releases in "${owner}/${repo}", but none contain an asset with the .ipa extension.`);
+          }
+
+          if (onProgress) onProgress(`Processing ${ipaReleases.length} releases with IPA packages...`);
+
+          // 4. Normalize versions and identifiers
+          const cleanOwner = owner.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const cleanRepo = repo.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const defaultBundleId = `com.${cleanOwner || 'developer'}.${cleanRepo || 'app'}`;
+
+          const versions = ipaReleases.map(({ release, asset }) => {
+            // Version tag normalization: remove leading 'v' or 'V'
+            let rawTag = release.tag_name || release.name || "1.0.0";
+            let cleanVersion = rawTag.trim().replace(/^v/i, '');
+            if (!cleanVersion) cleanVersion = rawTag.trim();
+
+            return {
+              version: cleanVersion,
+              date: release.published_at || release.created_at || new Date().toISOString(),
+              downloadURL: asset.browser_download_url,
+              size: asset.size || 0,
+              localizedDescription: release.body || release.name || `Release ${cleanVersion}`
+            };
+          });
+
+          // 5. Return unified NormalizedSourcePayload
+          return {
+            sourceName: repoData.name || repo,
+            sourceIdentifier: defaultBundleId,
+            sourceSubtitle: repoData.description || `AltStore source for ${repoData.name || repo}`,
+            sourceDescription: repoData.description || "",
+            sourceIconURL: repoData.owner?.avatar_url || "",
+            sourceWebsite: repoData.html_url || `https://github.com/${owner}/${repo}`,
+            apps: [
+              {
+                name: repoData.name || repo,
+                bundleIdentifier: defaultBundleId,
+                developerName: repoData.owner?.login || owner,
+                subtitle: repoData.description || "",
+                localizedDescription: repoData.description || "",
+                iconURL: repoData.owner?.avatar_url || "",
+                tintColor: "#007AFF",
+                versions: versions
+              }
+            ]
+          };
+        }
+      },
+
+      /**
+       * Provider: GitLab Releases (Future architectural extension)
+       */
+      gitlab: {
+        id: "gitlab",
+        name: "GitLab Releases",
+        badge: "Coming soon",
+        enabled: false,
+        description: "Coming soon: automatic extraction from GitLab projects and package registries.",
+        inputLabel: "GitLab Project",
+        inputPlaceholder: "owner/repo or https://gitlab.com/owner/repo",
+        inputHelp: "Coming soon: support for GitLab repositories and package registries.",
+        async fetchData() {
+          throw new Error("The GitLab provider is not yet enabled in this release.");
+        }
+      },
+
+      /**
+       * Provider: Direct Manifest / URL (Future architectural extension)
+       */
+      manifest: {
+        id: "manifest",
+        name: "Direct Manifest",
+        badge: "Coming soon",
+        enabled: false,
+        description: "Coming soon: direct generation from .ipa binary URLs or manifest plists.",
+        inputLabel: "Direct .ipa File URL",
+        inputPlaceholder: "https://example.com/builds/app.ipa",
+        inputHelp: "Coming soon: generate an AltStore source directly from IPA download URLs.",
+        async fetchData() {
+          throw new Error("The Direct Manifest provider is not yet enabled in this release.");
+        }
+      }
+    };
+
+    /**
+     * ========================================================================
+     * 3. UI CONTROLLER & APPLICATION STATE
+     * ========================================================================
+     */
+    class AppController {
+      constructor() {
+        this.activeProviderId = "github";
+        this.currentSourceData = null;
+        this.currentRawJSON = "";
+
+        this.initDOMElements();
+        this.bindEvents();
+      }
+
+      initDOMElements() {
+        // Form & inputs
+        this.generatorForm = document.getElementById("generatorForm");
+        this.repoInput = document.getElementById("repoInput");
+        this.inputLabel = document.getElementById("inputLabel");
+        this.inputHelp = document.getElementById("inputHelp");
+        this.btnGenerate = document.getElementById("btnGenerate");
+
+        // Advanced options
+        this.accordion = document.getElementById("advancedAccordion");
+        this.accordionToggle = document.getElementById("accordionToggle");
+        this.customSourceName = document.getElementById("customSourceName");
+        this.customIdentifier = document.getElementById("customIdentifier");
+        this.customIconURL = document.getElementById("customIconURL");
+        this.githubToken = document.getElementById("githubToken");
+
+        // Source pills
+        this.sourceOptions = document.querySelectorAll(".source-option");
+
+        // Status elements
+        this.statusLoading = document.getElementById("statusLoading");
+        this.loadingTitle = document.getElementById("loadingTitle");
+        this.loadingStep = document.getElementById("loadingStep");
+        this.statusError = document.getElementById("statusError");
+        this.errorTitle = document.getElementById("errorTitle");
+        this.errorMessage = document.getElementById("errorMessage");
+        this.errorHint = document.getElementById("errorHint");
+
+        // Output elements
+        this.outputSection = document.getElementById("outputSection");
+        this.summaryAppName = document.getElementById("summaryAppName");
+        this.summaryLatestVersion = document.getElementById("summaryLatestVersion");
+        this.summaryDeveloper = document.getElementById("summaryDeveloper");
+        this.summaryBundleId = document.getElementById("summaryBundleId");
+        this.appAvatar = document.getElementById("appAvatar");
+        this.appAvatarFallback = document.getElementById("appAvatarFallback");
+        this.statVersionsCount = document.getElementById("statVersionsCount");
+        this.statLatestSize = document.getElementById("statLatestSize");
+        this.jsonFileSize = document.getElementById("jsonFileSize");
+        this.jsonPreview = document.getElementById("jsonPreview");
+        this.btnCopy = document.getElementById("btnCopy");
+        this.copyBtnText = document.getElementById("copyBtnText");
+        this.btnDownload = document.getElementById("btnDownload");
+      }
+
+      bindEvents() {
+        // Source selector pills
+        this.sourceOptions.forEach(option => {
+          option.addEventListener("click", () => {
+            const providerId = option.dataset.provider;
+            const provider = Providers[providerId];
+            if (!provider) return;
+            if (!provider.enabled) {
+              this.showError(new Error(`The "${provider.name}" provider is currently in development. Initial release supports GitHub Releases exclusively.`));
+              return;
+            }
+            this.setActiveProvider(providerId);
+          });
+        });
+
+        // Form submit
+        this.generatorForm.addEventListener("submit", (e) => {
+          e.preventDefault();
+          this.handleGenerate();
+        });
+
+        // Sample pills click
+        document.querySelectorAll(".sample-pill").forEach(pill => {
+          pill.addEventListener("click", () => {
+            const sample = pill.dataset.sample;
+            if (sample) {
+              this.repoInput.value = sample;
+              this.repoInput.focus();
+              this.handleGenerate();
+            }
+          });
+        });
+
+        // Accordion toggle
+        this.accordionToggle.addEventListener("click", () => {
+          const isOpen = this.accordion.classList.toggle("open");
+          this.accordionToggle.setAttribute("aria-expanded", String(isOpen));
+        });
+
+        // Copy button
+        this.btnCopy.addEventListener("click", () => this.handleCopy());
+
+        // Download button
+        this.btnDownload.addEventListener("click", () => this.handleDownload());
+
+        // Keyboard shortcut: Enter inside input triggers generation
+        this.repoInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            this.handleGenerate();
+          }
+        });
+      }
+
+      /**
+       * Sets active provider and updates form elements dynamically
+       */
+      setActiveProvider(providerId) {
+        const provider = Providers[providerId];
+        if (!provider || !provider.enabled) return;
+
+        this.activeProviderId = providerId;
+
+        this.sourceOptions.forEach(opt => {
+          const isActive = opt.dataset.provider === providerId;
+          opt.classList.toggle("active", isActive);
+          opt.setAttribute("aria-selected", String(isActive));
+        });
+
+        if (this.inputLabel) this.inputLabel.textContent = provider.inputLabel;
+        if (this.inputHelp) this.inputHelp.textContent = provider.inputHelp;
+        if (this.repoInput) {
+          this.repoInput.placeholder = provider.inputPlaceholder;
+        }
+      }
+
+      /**
+       * Displays progressive loading state
+       */
+      showLoading(stepMessage = "Starting...") {
+        this.statusError.style.display = "none";
+        this.statusLoading.style.display = "flex";
+        this.loadingStep.textContent = stepMessage;
+        this.btnGenerate.disabled = true;
+      }
+
+      updateLoadingProgress(stepMessage) {
+        this.loadingStep.textContent = stepMessage;
+      }
+
+      hideLoading() {
+        this.statusLoading.style.display = "none";
+        this.btnGenerate.disabled = false;
+      }
+
+      /**
+       * Displays clear, actionable error feedback
+       */
+      showError(err) {
+        this.hideLoading();
+        this.statusError.style.display = "flex";
+        this.errorTitle.textContent = err.isRateLimit ? "GitHub Rate Limit Exceeded" : "Unable to generate source";
+        this.errorMessage.textContent = err.message || "An unexpected error occurred during processing.";
+
+        if (err.isRateLimit) {
+          this.errorHint.style.display = "block";
+          this.errorHint.innerHTML = `
+            <strong>How to resolve:</strong> Expand the <em>"Advanced Configuration & Token"</em> section above and provide a <strong>GitHub Personal Access Token</strong> (classic or fine-grained). Free tokens provide up to 5,000 requests per hour.
+          `;
+          // Auto-open accordion to facilitate token entry
+          this.accordion.classList.add("open");
+          this.accordionToggle.setAttribute("aria-expanded", "true");
+        } else if (err.message && err.message.includes(".ipa")) {
+          this.errorHint.style.display = "block";
+          this.errorHint.innerHTML = `
+            <strong>Tip:</strong> Ensure that the repository releases include at least one binary asset with the exact <code>.ipa</code> file extension.
+          `;
+        } else {
+          this.errorHint.style.display = "none";
+        }
+
+        // Smooth scroll to error notice
+        this.statusError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      /**
+       * Executes generation via active provider and AltStoreNormalizer
+       */
+      async handleGenerate() {
+        const provider = Providers[this.activeProviderId];
+        if (!provider || !provider.enabled) {
+          this.showError(new Error("Selected provider is not available."));
+          return;
+        }
+
+        const inputVal = this.repoInput.value.trim();
+        if (!inputVal) {
+          this.repoInput.focus();
+          this.showError(new Error("Please enter a GitHub repository path or URL."));
+          return;
+        }
+
+        this.showLoading("Verifying input and establishing connection...");
+
+        try {
+          // 1. Fetch & map via Adapter
+          const normalizedPayload = await provider.fetchData({
+            input: inputVal,
+            token: this.githubToken.value.trim(),
+            onProgress: (msg) => this.updateLoadingProgress(msg)
+          });
+
+          // 2. User metadata overrides
+          const overrides = {
+            sourceName: this.customSourceName.value,
+            sourceIdentifier: this.customIdentifier.value,
+            sourceIconURL: this.customIconURL.value
+          };
+
+          // 3. Final AltStore normalization
+          const finalSource = AltStoreNormalizer.buildSourceJSON(normalizedPayload, overrides);
+          this.currentSourceData = finalSource;
+          this.currentRawJSON = JSON.stringify(finalSource, null, 2);
+
+          // 4. Render UI
+          this.renderOutput(finalSource);
+          this.hideLoading();
+
+        } catch (error) {
+          this.showError(error);
+        }
+      }
+
+      /**
+       * Visual presentation of generated source
+       */
+      renderOutput(source) {
+        const primaryApp = source.apps[0];
+        const latestVersion = primaryApp.versions && primaryApp.versions[0];
+
+        // Summary Card
+        this.summaryAppName.textContent = primaryApp.name;
+        this.summaryLatestVersion.textContent = latestVersion ? `v${latestVersion.version}` : 'v1.0.0';
+        this.summaryDeveloper.textContent = primaryApp.developerName;
+        this.summaryBundleId.textContent = primaryApp.bundleIdentifier;
+
+        // Avatar icon
+        if (primaryApp.iconURL) {
+          this.appAvatar.style.display = "block";
+          this.appAvatarFallback.style.display = "none";
+          this.appAvatar.src = primaryApp.iconURL;
+        } else {
+          this.appAvatar.style.display = "none";
+          this.appAvatarFallback.style.display = "flex";
+          this.appAvatarFallback.textContent = primaryApp.name.charAt(0).toUpperCase();
+        }
+
+        // Stats
+        this.statVersionsCount.textContent = primaryApp.versions ? primaryApp.versions.length : 0;
+        this.statLatestSize.textContent = latestVersion ? AltStoreNormalizer.formatBytes(latestVersion.size) : '0 B';
+
+        // Code Preview & Formatted Syntax
+        this.jsonPreview.innerHTML = this.highlightJSON(this.currentRawJSON);
+        
+        // Approximate JSON size in KB
+        const jsonBytes = new Blob([this.currentRawJSON]).size;
+        this.jsonFileSize.textContent = AltStoreNormalizer.formatBytes(jsonBytes);
+
+        // Display output section with animation
+        this.outputSection.classList.add("visible");
+        this.outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      /**
+       * Safe, dependency-free syntax highlighting for JSON code preview
+       */
+      highlightJSON(jsonString) {
+        const escaped = jsonString
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+
+        return escaped.replace(
+          /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+          function (match) {
+            let cls = 'json-number';
+            if (/^"/.test(match)) {
+              if (/:$/.test(match)) {
+                cls = 'json-key';
+              } else {
+                cls = 'json-string';
+              }
+            } else if (/true|false/.test(match)) {
+              cls = 'json-boolean';
+            } else if (/null/.test(match)) {
+              cls = 'json-null';
+            }
+            return `<span class="${cls}">${match}</span>`;
+          }
+        );
+      }
+
+      /**
+       * Copies raw JSON content to system clipboard with temporary confirmation
+       */
+      async handleCopy() {
+        if (!this.currentRawJSON) return;
+
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(this.currentRawJSON);
+          } else {
+            // Fallback for non-secure contexts or legacy browsers
+            const textArea = document.createElement("textarea");
+            textArea.value = this.currentRawJSON;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            textArea.style.top = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            document.execCommand('copy');
+            textArea.remove();
+          }
+
+          // Visual confirmation feedback
+          const originalText = this.copyBtnText.textContent;
+          this.btnCopy.classList.add("copied");
+          this.copyBtnText.textContent = "Copied!";
+          
+          setTimeout(() => {
+            this.btnCopy.classList.remove("copied");
+            this.copyBtnText.textContent = originalText;
+          }, 2500);
+
+        } catch (err) {
+          console.error("Clipboard copy error:", err);
+          alert("Unable to copy to clipboard. Please select and copy manually.");
+        }
+      }
+
+      /**
+       * Immediate download of source.json file using Blob
+       */
+      handleDownload() {
+        if (!this.currentRawJSON) return;
+
+        try {
+          const blob = new Blob([this.currentRawJSON], { type: "application/json;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          
+          // Default download file name
+          a.href = url;
+          a.download = "source.json";
+          document.body.appendChild(a);
+          a.click();
+          
+          // Cleanup
+          setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }, 150);
+
+        } catch (err) {
+          console.error("Download error:", err);
+          alert("Error creating file download.");
+        }
+      }
+    }
+
+    // Initialize application when DOM is ready
+    document.addEventListener("DOMContentLoaded", () => {
+      new AppController();
+    });
+  </script>
+</body>
+</html>
