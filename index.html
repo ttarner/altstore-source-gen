@@ -519,8 +519,15 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .status-panel.loading {
-      display: flex;
+    .status-panel {
+      display: none;
+      padding: 1.25rem 1.5rem;
+      border-radius: var(--radius-md);
+      font-size: 0.92rem;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .status-panel.panel-loading {
       align-items: center;
       gap: 1rem;
       background: rgba(99, 102, 241, 0.07);
@@ -542,8 +549,7 @@
       to { transform: rotate(360deg); }
     }
 
-    .status-panel.error {
-      display: flex;
+    .status-panel.panel-error {
       align-items: flex-start;
       gap: 0.9rem;
       background: rgba(239, 68, 68, 0.08);
@@ -1157,7 +1163,7 @@
     </main>
 
     <!-- Feedback Container (Loading & Errors) -->
-    <div id="statusLoading" class="status-panel loading" role="status" aria-live="polite">
+    <div id="statusLoading" class="status-panel panel-loading" style="display: none;" role="status" aria-live="polite">
       <div class="spinner"></div>
       <div>
         <div style="font-weight: 600; color: #ffffff;" id="loadingTitle">Processing...</div>
@@ -1165,7 +1171,7 @@
       </div>
     </div>
 
-    <div id="statusError" class="status-panel error" role="alert" aria-live="assertive">
+    <div id="statusError" class="status-panel panel-error" style="display: none;" role="alert" aria-live="assertive">
       <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="10"></circle>
         <line x1="12" y1="8" x2="12" y2="12"></line>
@@ -1712,6 +1718,10 @@
         this.errorTitle = document.getElementById("errorTitle");
         this.errorMessage = document.getElementById("errorMessage");
         this.errorHint = document.getElementById("errorHint");
+
+        // Guarantee hidden state on initialization
+        if (this.statusLoading) this.statusLoading.style.display = "none";
+        if (this.statusError) this.statusError.style.display = "none";
 
         // Output elements
         this.outputSection = document.getElementById("outputSection");
