@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description" content="Client-only source.json generator for AltStore and SideStore from GitHub Releases and heterogeneous data sources.">
   <title>AltStore Source Generator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1006,6 +1006,314 @@
     .footer a:hover {
       color: var(--text-primary);
     }
+
+    /* ==========================================================================
+       RESPONSIVE DESIGN (Mobile Portrait & Landscape)
+       ========================================================================== */
+
+    /* Mobile Devices & Small Tablets (Portrait <= 640px) */
+    @media (max-width: 640px) {
+      body {
+        /* Respect safe areas for notched devices, dynamic islands, and home indicators */
+        padding: max(1.25rem, env(safe-area-inset-top)) max(0.85rem, env(safe-area-inset-right)) max(2rem, env(safe-area-inset-bottom)) max(0.85rem, env(safe-area-inset-left));
+        background-attachment: scroll; /* Smooth scrolling performance on mobile Safari */
+      }
+
+      .app-container {
+        gap: 1.25rem;
+      }
+
+      /* Header */
+      .header {
+        gap: 0.65rem;
+        padding: 0.25rem 0 0.5rem;
+      }
+
+      .header-badge {
+        font-size: 0.72rem;
+        padding: 0.25rem 0.65rem;
+      }
+
+      .title {
+        font-size: 1.75rem;
+        letter-spacing: -0.025em;
+      }
+
+      .subtitle {
+        font-size: 0.88rem;
+        line-height: 1.45;
+      }
+
+      /* Card & Form Container */
+      .card {
+        padding: 1.15rem 1rem;
+        border-radius: var(--radius-md);
+      }
+
+      .section-label {
+        font-size: 0.74rem;
+        margin-bottom: 0.5rem;
+      }
+
+      /* Segmented Source Options */
+      .segmented-control {
+        grid-template-columns: 1fr;
+        gap: 0.45rem;
+        padding: 0.4rem;
+      }
+
+      .source-option {
+        padding: 0.65rem 0.85rem;
+        font-size: 0.88rem;
+      }
+
+      /* Form Inputs - Strict 16px font-size to prevent iOS Safari auto-zoom */
+      .text-input,
+      .compact-input {
+        font-size: 16px !important;
+      }
+
+      .text-input {
+        height: 46px;
+        padding-left: 2.65rem;
+      }
+
+      .input-icon-leading {
+        left: 0.85rem;
+        width: 16px;
+        height: 16px;
+      }
+
+      .form-group {
+        margin-top: 1.25rem;
+      }
+
+      .form-label-row {
+        flex-wrap: wrap;
+        gap: 0.25rem;
+      }
+
+      /* Sample Pills */
+      .samples-wrapper {
+        gap: 0.4rem;
+      }
+
+      .sample-pill {
+        padding: 0.28rem 0.6rem;
+        font-size: 0.74rem;
+        min-height: 28px;
+      }
+
+      /* Full Width Submit Button */
+      .form-actions {
+        margin-top: 1.25rem;
+        width: 100%;
+      }
+
+      .form-actions .btn-primary {
+        width: 100%;
+        height: 46px;
+        font-size: 0.95rem;
+      }
+
+      /* Metadata Preview Card */
+      .meta-card {
+        padding: 1rem;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.85rem;
+      }
+
+      .app-preview-info {
+        width: 100%;
+      }
+
+      .app-name {
+        font-size: 1.05rem;
+      }
+
+      .meta-stat-group {
+        width: 100%;
+        justify-content: space-between;
+        border-top: 1px solid var(--border-subtle);
+        padding-top: 0.75rem;
+      }
+
+      .stat-pill {
+        align-items: flex-start;
+      }
+
+      /* AltStore & SideStore Live Links Card */
+      .links-card {
+        padding: 1rem;
+        gap: 0.75rem;
+      }
+
+      .links-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+      }
+
+      .link-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+        padding: 0.75rem;
+      }
+
+      .link-row-info {
+        width: 100%;
+      }
+
+      .link-value {
+        font-size: 0.78rem;
+      }
+
+      .link-actions-group {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+      }
+
+      .link-actions-group:has(> :only-child) {
+        grid-template-columns: 1fr;
+      }
+
+      .btn-link-action {
+        width: 100%;
+        height: 36px;
+        justify-content: center;
+        font-size: 0.8rem;
+      }
+
+      .links-empty-prompt {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.65rem;
+        padding: 0.85rem;
+      }
+
+      .links-empty-prompt .btn-link-action {
+        width: 100%;
+        height: 36px;
+        justify-content: center;
+      }
+
+      /* Code Header and Action Buttons */
+      .code-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.65rem;
+        padding: 0.75rem 0.9rem;
+      }
+
+      .code-title {
+        justify-content: space-between;
+      }
+
+      .code-actions {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.4rem;
+        width: 100%;
+      }
+
+      .btn-action-sm {
+        height: 34px;
+        padding: 0 0.25rem;
+        justify-content: center;
+        font-size: 0.76rem;
+        gap: 0.25rem;
+      }
+
+      .code-body {
+        max-height: 360px;
+        padding: 0.9rem;
+        font-size: 0.78rem;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+
+    /* Mobile Devices in Landscape Orientation (Max height 550px) */
+    @media (orientation: landscape) and (max-height: 550px) {
+      body {
+        /* Minimal vertical padding so content remains visible without extensive scrolling */
+        padding: max(0.5rem, env(safe-area-inset-top)) max(1.25rem, env(safe-area-inset-right)) max(0.75rem, env(safe-area-inset-bottom)) max(1.25rem, env(safe-area-inset-left));
+        background-attachment: scroll;
+      }
+
+      .app-container {
+        gap: 0.85rem;
+        max-width: 820px;
+      }
+
+      /* Ultra-compact header */
+      .header {
+        gap: 0.25rem;
+        padding: 0.2rem 0;
+      }
+
+      .header-badge {
+        font-size: 0.68rem;
+        padding: 0.15rem 0.5rem;
+      }
+
+      .title {
+        font-size: 1.45rem;
+      }
+
+      .subtitle {
+        display: none; /* Hide verbose subtitle in landscape to conserve vertical viewport */
+      }
+
+      /* Compact Card */
+      .card {
+        padding: 0.9rem 1.15rem;
+      }
+
+      .segmented-control {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+        padding: 0.35rem;
+      }
+
+      .source-option {
+        padding: 0.45rem 0.7rem;
+        font-size: 0.82rem;
+      }
+
+      .form-group {
+        margin-top: 0.85rem;
+      }
+
+      .form-actions {
+        margin-top: 0.85rem;
+      }
+
+      /* Compact Live Links */
+      .links-card {
+        padding: 0.85rem 1.1rem;
+        gap: 0.6rem;
+      }
+
+      .link-row {
+        padding: 0.5rem 0.8rem;
+      }
+
+      /* Limit Code Viewer Height to avoid trapped scrolling in short viewports */
+      .code-header {
+        padding: 0.55rem 0.9rem;
+      }
+
+      .code-body {
+        max-height: 200px;
+        padding: 0.75rem;
+        font-size: 0.78rem;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1312,22 +1620,23 @@
             <span style="color: var(--text-dim);">•</span>
             <span id="jsonFileSize" style="color: var(--text-muted); font-size: 0.78rem;">0 KB</span>
           </div>
+          <div class="code-actions">
             <!-- Share Link Button -->
             <button type="button" id="btnShareLink" class="btn-action-sm" title="Copy shareable link with repository parameter">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
               </svg>
-              <span id="shareBtnText">Share Link</span>
+              <span id="shareBtnText">Share</span>
             </button>
 
             <!-- Copy Button -->
-            <button type="button" id="btnCopy" class="btn-action-sm btn-copy" title="Copy to clipboard">
+            <button type="button" id="btnCopy" class="btn-action-sm btn-copy" title="Copy source.json to clipboard">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
               </svg>
-              <span id="copyBtnText">Copy to clipboard</span>
+              <span id="copyBtnText">Copy</span>
             </button>
             
             <!-- Download Button -->
@@ -1337,7 +1646,7 @@
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
-              <span>Download source.json</span>
+              <span>Download</span>
             </button>
           </div>
         </div>
@@ -1918,7 +2227,7 @@
           // Feedback animation
           const originalText = this.shareBtnText.textContent;
           this.btnShareLink.classList.add("copied");
-          this.shareBtnText.textContent = "Link Copied!";
+          this.shareBtnText.textContent = "Copied!";
 
           setTimeout(() => {
             this.btnShareLink.classList.remove("copied");
